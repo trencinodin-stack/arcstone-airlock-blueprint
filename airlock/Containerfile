@@ -23,7 +23,7 @@ RUN set -euxo pipefail \
     && mkdir -p /opt/src /opt/bin /opt/aeneas/backends/coq \
     && git clone https://github.com/AeneasVerif/aeneas.git /opt/src/aeneas \
     && git -C /opt/src/aeneas checkout "${AENEAS_COMMIT}" \
-    && PINNED_CHARON="$(python3 -c 'import json, pathlib, re, subprocess; root = pathlib.Path("/opt/src/aeneas"); pf = root / "charon-pin"; fl = root / "flake.lock"; fn = root / "flake.nix"; print(pf.read_text().strip() if pf.exists() else (next((v["locked"]["rev"] for k, v in json.loads(fl.read_text()).get("nodes", {}).items() if (k == "charon" or k.startswith("charon")) and "locked" in v and "rev" in v["locked"]), "") if fl.exists() else (m.group(1) if fn.exists() and (m := re.search(r"AeneasVerif/charon(?:/|\?rev=)([0-9a-f]{7,40})", fn.read_text())) else subprocess.check_output(["git", "-C", str(root), "ls-tree", "HEAD", "charon"], text=True).split()[2])))')" \
+    && PINNED_CHARON="$(grep -Ev '^\s*(#|$)' /opt/src/aeneas/charon-pin | tr -d '[:space:]')" \
     && test -n "${PINNED_CHARON}" \
     && echo "Resolved PINNED_CHARON=${PINNED_CHARON}" \
     && if [ "${CHARON_COMMIT}" != "main" ] && [ "${CHARON_COMMIT}" != "${PINNED_CHARON}" ]; then \
