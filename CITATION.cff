@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this template blueprint, please cite the canonical upstream specifications below. Do not mint a downstream DOI for this template repository."
+title: "arcstone-airlock-blueprint: Decoupled Refinement Airlock Template"
+authors:
+  - family-names: "Tuohy"
+    given-names: "Jesse"
+version: "0.1.0"
+date-released: "2026-11-12"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.22665852"
+    description: "Upstream Canonical Specification Reference 1"
+  - type: doi
+    value: "10.5281/zenodo.24041851"
+    description: "Upstream Canonical Specification Reference 2"
+  - type: doi
+    value: "10.5281/zenodo.24093739"
+    description: "Upstream Canonical Specification Reference 3"

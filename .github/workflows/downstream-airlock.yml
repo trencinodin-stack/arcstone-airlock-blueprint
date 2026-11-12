@@ -1,0 +1,144 @@
+name: Downstream Refinement Airlock
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: airlock-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prove:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      commit_sha: ${{ steps.resolve.outputs.commit_sha }}
+      tag_name: ${{ steps.resolve.outputs.tag_name }}
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Resolve and validate release identity
+        id: resolve
+        run: |
+          COMMIT_SHA="$(git rev-parse --verify "${GITHUB_SHA}^{commit}")"
+          TAG_NAME="${GITHUB_REF_NAME}"
+          git fetch origin main
+          git merge-base --is-ancestor "$COMMIT_SHA" origin/main
+          make check-pins
+          echo "commit_sha=${COMMIT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Run hermetic offline proof and canary
+        env:
+          RELEASE_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.resolve.outputs.tag_name }}
+          RELEASE_COMMIT: ${{ steps.resolve.outputs.commit_sha }}
+        run: |
+          make airlock
+
+      - name: Upload unprivileged receipt artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: refinement-audit
+          path: out/REFINEMENT-AUDIT.json
+          if-no-files-found: error
+
+  attest:
+    needs: prove
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout trusted repository scripts
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.prove.outputs.commit_sha }}
+          persist-credentials: false
+
+      - name: Download receipt as passive data
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.2.1
+        with:
+          name: refinement-audit
+          path: downloaded-receipt
+
+      - name: Validate schema and evidence hashes via trusted scripts
+        env:
+          EXPECTED_REPO: ${{ github.repository }}
+          EXPECTED_TAG: ${{ needs.prove.outputs.tag_name }}
+          VERIFY_ATTESTATION: "0"
+        run: |
+          ./airlock/scripts/verify-receipt.sh downloaded-receipt/REFINEMENT-AUDIT.json "${{ needs.prove.outputs.commit_sha }}"
+
+      - name: Attest canonical receipt provenance
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v2.2.3
+        with:
+          subject-path: downloaded-receipt/REFINEMENT-AUDIT.json
+
+      - name: Re-upload validated receipt for release gate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: attested-refinement-audit
+          path: downloaded-receipt/REFINEMENT-AUDIT.json
+          if-no-files-found: error
+
+  release-gate:
+    needs: [prove, attest]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: production
+    permissions:
+      contents: write
+      attestations: read
+    steps:
+      - name: Checkout trusted repository scripts
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.prove.outputs.commit_sha }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Download attested receipt
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.2.1
+        with:
+          name: attested-refinement-audit
+          path: verified-receipt
+
+      - name: Verify attestation, protected baselines, and remote tag
+        env:
+          EXPECTED_REPO: ${{ github.repository }}
+          EXPECTED_TAG: ${{ needs.prove.outputs.tag_name }}
+          EXPECTED_SPEC_V_SHA256: ${{ vars.EXPECTED_SPEC_V_SHA256 }}
+          EXPECTED_STATEMENT_GOLDEN_SHA256: ${{ vars.EXPECTED_STATEMENT_GOLDEN_SHA256 }}
+          VERIFY_ATTESTATION: "1"
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ./airlock/scripts/verify-receipt.sh verified-receipt/REFINEMENT-AUDIT.json "${{ needs.prove.outputs.commit_sha }}"
+          git fetch --tags origin
+          REMOTE_TAG_COMMIT="$(git rev-parse --verify "refs/tags/${EXPECTED_TAG}^{commit}")"
+          test "$REMOTE_TAG_COMMIT" = "${{ needs.prove.outputs.commit_sha }}"
+
+      - name: Publish immutable GitHub Release with attested receipt
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ needs.prove.outputs.tag_name }}" \
+            verified-receipt/REFINEMENT-AUDIT.json \
+            --target "${{ needs.prove.outputs.commit_sha }}" \
+            --title "${{ needs.prove.outputs.tag_name }}" \
+            --notes "Verified Decoupled Refinement Airlock release (Anchor: A-77-DELTA-SHIELD-LOCKED, admitted_axioms: 0)."

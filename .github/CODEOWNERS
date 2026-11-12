@@ -1,0 +1,6 @@
+# Protect verification harness, lockfiles, and release workflows
+/airlock/            @trencinodin-stack
+/.github/            @trencinodin-stack
+/PINS.lock           @trencinodin-stack
+/Cargo.toml          @trencinodin-stack
+/Cargo.lock          @trencinodin-stack

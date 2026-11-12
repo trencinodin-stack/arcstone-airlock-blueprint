@@ -1,0 +1,7 @@
+Refinement.decide_refines_spec
+     : forall (m : gen_mode) (budget cost : gen_u32),
+       gen_decide m budget cost =
+       Ok
+         (if spec_allow m (u32_to_Z budget) (u32_to_Z cost)
+          then Verdict_Allow
+          else Verdict_Deny)

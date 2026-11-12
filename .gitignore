@@ -1,0 +1,11 @@
+/target
+/out
+/.airlock-work
+*.vo
+*.vok
+*.vos
+*.glob
+.lia.cache
+.nia.cache
+__pycache__/
+*.pyc

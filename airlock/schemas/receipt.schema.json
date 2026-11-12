@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ArcstoneAirlockRefinementAuditV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "anchor",
+    "release",
+    "toolchain",
+    "evidence",
+    "proof"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "status": {
+      "type": "string",
+      "const": "REFINEMENT-PROOF-CHAIN-CLOSED"
+    },
+    "anchor": {
+      "type": "string",
+      "const": "A-77-DELTA-SHIELD-LOCKED"
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "tag",
+        "commit_sha",
+        "source_tree_id",
+        "source_archive_sha256",
+        "crate_path",
+        "upstream_doi_refs"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "minLength": 3
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "source_tree_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40,64}$"
+        },
+        "source_archive_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "crate_path": {
+          "type": "string",
+          "const": "crates/example-no-std-gate"
+        },
+        "upstream_doi_refs": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "string",
+            "pattern": "^10\\.5281/zenodo\\.[0-9]+$"
+          }
+        }
+      }
+    },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "oci_image_digest",
+        "rustc_nightly",
+        "charon_commit",
+        "aeneas_commit",
+        "coq_version"
+      ],
+      "properties": {
+        "oci_image_digest": {
+          "type": "string",
+          "pattern": "^.+@sha256:[0-9a-f]{64}$"
+        },
+        "rustc_nightly": {
+          "type": "string",
+          "minLength": 5
+        },
+        "charon_commit": {
+          "type": "string",
+          "minLength": 7
+        },
+        "aeneas_commit": {
+          "type": "string",
+          "minLength": 7
+        },
+        "coq_version": {
+          "type": "string",
+          "const": "8.18.0"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pins_lock_sha256",
+        "cargo_lock_sha256",
+        "check_pins_sh_sha256",
+        "check_shape_sh_sha256",
+        "entrypoint_sh_sha256",
+        "run_airlock_sh_sha256",
+        "mint_receipt_py_sha256",
+        "verify_receipt_sh_sha256",
+        "receipt_schema_json_sha256",
+        "primitives_v_sha256",
+        "generated_interface_v_sha256",
+        "spec_v_sha256",
+        "refinement_v_sha256",
+        "generated_shape_golden_sha256",
+        "statement_golden_sha256",
+        "assumptions_allow_sha256",
+        "llbc_sha256",
+        "generated_coq_manifest_sha256"
+      ],
+      "properties": {
+        "pins_lock_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "cargo_lock_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "check_pins_sh_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "check_shape_sh_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "entrypoint_sh_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "run_airlock_sh_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "mint_receipt_py_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "verify_receipt_sh_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "receipt_schema_json_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "primitives_v_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "generated_interface_v_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "spec_v_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "refinement_v_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "generated_shape_golden_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "statement_golden_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "assumptions_allow_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "llbc_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "generated_coq_manifest_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "theorems_verified",
+        "coqchk_passed",
+        "admitted_axioms",
+        "unexpected_assumptions",
+        "canary_mutant_rejected"
+      ],
+      "properties": {
+        "theorems_verified": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "const": "Airlock.Refinement.decide_refines_spec"
+          }
+        },
+        "coqchk_passed": {
+          "type": "boolean",
+          "const": true
+        },
+        "admitted_axioms": {
+          "type": "integer",
+          "const": 0
+        },
+        "unexpected_assumptions": {
+          "type": "integer",
+          "const": 0
+        },
+        "canary_mutant_rejected": {
+          "type": "boolean",
+          "const": true
+        }
+      }
+    }
+  }
+}
