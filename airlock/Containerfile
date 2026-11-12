@@ -23,38 +23,8 @@ RUN set -euxo pipefail \
     && mkdir -p /opt/src /opt/bin /opt/aeneas/backends/coq \
     && git clone https://github.com/AeneasVerif/aeneas.git /opt/src/aeneas \
     && git -C /opt/src/aeneas checkout "${AENEAS_COMMIT}" \
-    && PINNED_CHARON="$(python3 - <<'PY'
-import json, pathlib, re, subprocess
-
-root = pathlib.Path("/opt/src/aeneas")
-pin_file = root / "charon-pin"
-flake_lock = root / "flake.lock"
-flake_nix = root / "flake.nix"
-
-if pin_file.exists():
-    print(pin_file.read_text().strip())
-elif flake_lock.exists():
-    data = json.loads(flake_lock.read_text())
-    nodes = data.get("nodes", {})
-    charon_node = nodes.get("charon") or next((v for k, v in nodes.items() if k.startswith("charon")), None)
-    if charon_node and "locked" in charon_node and "rev" in charon_node["locked"]:
-        print(charon_node["locked"]["rev"])
-    else:
-        raise SystemExit("charon rev not found in flake.lock")
-elif flake_nix.exists():
-    m = re.search(r"AeneasVerif/charon(?:/|\?rev=)([0-9a-f]{7,40})", flake_nix.read_text())
-    if m:
-        print(m.group(1))
-    else:
-        raise SystemExit("charon rev not found in flake.nix")
-else:
-    out = subprocess.check_output(["git", "-C", str(root), "ls-tree", "HEAD", "charon"], text=True).strip()
-    if out:
-        print(out.split()[2])
-    else:
-        raise SystemExit("Could not resolve Charon commit from Aeneas repo")
-PY
-)" \
+    && PINNED_CHARON="$(python3 -c 'import json, pathlib, re, subprocess; root = pathlib.Path("/opt/src/aeneas"); pf = root / "charon-pin"; fl = root / "flake.lock"; fn = root / "flake.nix"; print(pf.read_text().strip() if pf.exists() else (next((v["locked"]["rev"] for k, v in json.loads(fl.read_text()).get("nodes", {}).items() if (k == "charon" or k.startswith("charon")) and "locked" in v and "rev" in v["locked"]), "") if fl.exists() else (m.group(1) if fn.exists() and (m := re.search(r"AeneasVerif/charon(?:/|\?rev=)([0-9a-f]{7,40})", fn.read_text())) else subprocess.check_output(["git", "-C", str(root), "ls-tree", "HEAD", "charon"], text=True).split()[2])))')" \
+    && test -n "${PINNED_CHARON}" \
     && echo "Resolved PINNED_CHARON=${PINNED_CHARON}" \
     && if [ "${CHARON_COMMIT}" != "main" ] && [ "${CHARON_COMMIT}" != "${PINNED_CHARON}" ]; then \
          echo "ERROR: CHARON_COMMIT (${CHARON_COMMIT}) != resolved PINNED_CHARON (${PINNED_CHARON})"; exit 1; \
@@ -63,8 +33,10 @@ PY
     && git -C /opt/src/charon checkout "${PINNED_CHARON}" \
     && echo "${PINNED_CHARON}" > /opt/aeneas/charon-pin \
     && git -C /opt/src/aeneas rev-parse HEAD > /opt/aeneas/aeneas-pin
+
 # Install Charon's exact pinned Rust nightly toolchain + compiler internals and build Charon
-RUN cd /opt/src/charon \
+RUN set -euxo pipefail \
+    && cd /opt/src/charon \
     && if [ -f rust-toolchain.template ] && [ ! -f rust-toolchain ] && [ ! -f rust-toolchain.toml ]; then \
          cp rust-toolchain.template rust-toolchain; \
        fi \
@@ -74,7 +46,8 @@ RUN cd /opt/src/charon \
     && cp bin/charon /opt/bin/charon
 
 # Install Aeneas OCaml dependencies and build Aeneas
-RUN eval $(opam env) \
+RUN set -euxo pipefail \
+    && eval $(opam env) \
     && cd /opt/src/aeneas \
     && opam update \
     && opam install -y src --deps-only \
