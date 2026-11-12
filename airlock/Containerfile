@@ -36,7 +36,7 @@ RUN set -euxo pipefail \
     && echo "${PINNED_CHARON}" > /opt/aeneas/charon-pin \
     && git -C /opt/src/aeneas rev-parse HEAD > /opt/aeneas/aeneas-pin
 
-# Install Charon's exact pinned Rust nightly toolchain + compiler internals and build Charon
+# Install Charon's exact pinned Rust nightly toolchain + compiler internals, build Charon, and reclaim ~8GB build artifacts
 RUN set -euxo pipefail \
     && cd /opt/src/charon \
     && if [ -f rust-toolchain.template ] && [ ! -f rust-toolchain ] && [ ! -f rust-toolchain.toml ]; then \
@@ -46,10 +46,13 @@ RUN set -euxo pipefail \
     && rustup show active-toolchain | awk '{print $1}' > /opt/aeneas/rust-nightly-pin \
     && rustup component add rustfmt \
     && make build-charon-rust \
-    && cp bin/* /opt/bin/
+    && cp bin/* /opt/bin/ \
+    && cd / \
+    && rm -rf /opt/src/charon /opt/cargo/registry/cache /opt/cargo/registry/src /opt/cargo/git/checkouts
 
-# Create OCaml 5.2.0 switch with Coq 8.18.0 + Aeneas dependencies and build Aeneas
+# Replace 4.14.2 switch with OCaml 5.2.0 + Coq 8.18.0 switch, build Aeneas, and clean caches
 RUN set -euxo pipefail \
+    && opam switch remove -y 4.14.2+flambda || true \
     && opam update default coq-released \
     && opam switch create aeneas-5.2 ocaml-base-compiler.5.2.0 \
     && eval $(opam env --switch=aeneas-5.2 --set-switch) \
@@ -59,7 +62,10 @@ RUN set -euxo pipefail \
     && opam install -y --deps-only ${OPAM_FILES} \
     && make \
     && cp bin/aeneas /opt/bin/aeneas \
-    && cp -r backends/coq/* /opt/aeneas/backends/coq/
+    && cp -r backends/coq/* /opt/aeneas/backends/coq/ \
+    && cd / \
+    && rm -rf /opt/src/aeneas \
+    && opam clean -a -c -s --logs
 
 # Expose OCaml 5.2.0 + Coq 8.18.0 switch binaries on PATH for runtime container execution
 ENV PATH="/home/coq/.opam/aeneas-5.2/bin:/opt/cargo/bin:/opt/bin:${PATH}" \
