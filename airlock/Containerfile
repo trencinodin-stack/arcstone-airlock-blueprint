@@ -1,5 +1,5 @@
-# Coq 8.18.0 + OCaml 5.1 base image (replace with @sha256:... digest once built and pushed)
-FROM coqorg/coq:8.18.0-ocaml-5.1-flambda
+# Coq 8.20.0 + OCaml 5.2.0 base image (replace with @sha256:... digest once built and pushed)
+FROM coqorg/coq:8.20.0-ocaml-5.2.0-flambda
 
 USER root
 
