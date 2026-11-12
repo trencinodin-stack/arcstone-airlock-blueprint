@@ -23,16 +23,38 @@ RUN set -euxo pipefail \
     && mkdir -p /opt/src /opt/bin /opt/aeneas/backends/coq \
     && git clone https://github.com/AeneasVerif/aeneas.git /opt/src/aeneas \
     && git -C /opt/src/aeneas checkout "${AENEAS_COMMIT}" \
-    && ls -la /opt/src/aeneas \
-    && if [ -f /opt/src/aeneas/charon-pin ]; then \
-         PINNED_CHARON="$(tr -d '[:space:]' < /opt/src/aeneas/charon-pin)"; \
-       elif [ -d /opt/src/aeneas/charon ] || git -C /opt/src/aeneas ls-tree HEAD charon | grep -q commit; then \
-         PINNED_CHARON="$(git -C /opt/src/aeneas ls-tree HEAD charon | awk '{print $3}')"; \
-       elif [ -f /opt/src/aeneas/flake.nix ]; then \
-         PINNED_CHARON="$(grep -Eo 'charon\.url.*rev=[0-9a-f]{7,40}' /opt/src/aeneas/flake.nix | sed -E 's/.*rev=([0-9a-f]+).*/\1/' | head -n1)"; \
-       else \
-         echo "ERROR: Could not locate Charon pin in /opt/src/aeneas"; exit 1; \
-       fi \
+    && PINNED_CHARON="$(python3 - <<'PY'
+import json, pathlib, re, subprocess
+
+root = pathlib.Path("/opt/src/aeneas")
+pin_file = root / "charon-pin"
+flake_lock = root / "flake.lock"
+flake_nix = root / "flake.nix"
+
+if pin_file.exists():
+    print(pin_file.read_text().strip())
+elif flake_lock.exists():
+    data = json.loads(flake_lock.read_text())
+    nodes = data.get("nodes", {})
+    charon_node = nodes.get("charon") or next((v for k, v in nodes.items() if k.startswith("charon")), None)
+    if charon_node and "locked" in charon_node and "rev" in charon_node["locked"]:
+        print(charon_node["locked"]["rev"])
+    else:
+        raise SystemExit("charon rev not found in flake.lock")
+elif flake_nix.exists():
+    m = re.search(r"AeneasVerif/charon(?:/|\?rev=)([0-9a-f]{7,40})", flake_nix.read_text())
+    if m:
+        print(m.group(1))
+    else:
+        raise SystemExit("charon rev not found in flake.nix")
+else:
+    out = subprocess.check_output(["git", "-C", str(root), "ls-tree", "HEAD", "charon"], text=True).strip()
+    if out:
+        print(out.split()[2])
+    else:
+        raise SystemExit("Could not resolve Charon commit from Aeneas repo")
+PY
+)" \
     && echo "Resolved PINNED_CHARON=${PINNED_CHARON}" \
     && if [ "${CHARON_COMMIT}" != "main" ] && [ "${CHARON_COMMIT}" != "${PINNED_CHARON}" ]; then \
          echo "ERROR: CHARON_COMMIT (${CHARON_COMMIT}) != resolved PINNED_CHARON (${PINNED_CHARON})"; exit 1; \
