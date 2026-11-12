@@ -42,6 +42,7 @@ RUN set -euxo pipefail \
        fi \
     && rustup show active-toolchain \
     && rustup show active-toolchain | awk '{print $1}' > /opt/aeneas/rust-nightly-pin \
+    && rustup component add rustfmt \
     && make build-charon-rust \
     && cp bin/charon /opt/bin/charon
 
