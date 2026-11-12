@@ -1,5 +1,5 @@
-# Coq 8.18.0 base image (replace with @sha256:... digest once built and pushed)
-FROM coqorg/coq:8.18.0-ocaml-4.14.2-flambda
+# Coq 8.18.0 + OCaml 5.1 base image (replace with @sha256:... digest once built and pushed)
+FROM coqorg/coq:8.18.0-ocaml-5.1-flambda
 
 USER root
 
@@ -55,11 +55,7 @@ RUN set -euxo pipefail \
     && opam update default coq-released \
     && OPAM_FILES="$(find . -maxdepth 2 -name '*.opam')" \
     && echo "Found opam files: ${OPAM_FILES}" \
-    && if [ -n "${OPAM_FILES}" ]; then \
-         opam install -y --deps-only ${OPAM_FILES}; \
-       else \
-         opam install -y dune ocamlfind ppx_deriving visitors easy_logging zarith yojson core_unix odate unionFind; \
-       fi \
+    && opam install -y --deps-only ${OPAM_FILES} \
     && make \
     && cp bin/aeneas /opt/bin/aeneas \
     && cp -r backends/coq/* /opt/aeneas/backends/coq/
