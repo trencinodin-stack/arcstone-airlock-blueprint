@@ -14,7 +14,8 @@ ENV CARGO_HOME=/opt/cargo \
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl git build-essential pkg-config libssl-dev python3 jq m4 libgmp-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && git config --global --add safe.directory '*'
 
 # Install rustup (exact nightly is installed from Charon's pinned rust-toolchain)
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain none --profile minimal
@@ -51,7 +52,7 @@ RUN set -euxo pipefail \
 RUN set -euxo pipefail \
     && eval $(opam env) \
     && cd /opt/src/aeneas \
-    && opam update \
+    && opam update default coq-released \
     && opam install -y src --deps-only \
     && make \
     && cp bin/aeneas /opt/bin/aeneas \
