@@ -57,10 +57,13 @@ RUN set -euxo pipefail \
     && opam switch create aeneas-5.2 ocaml-base-compiler.5.2.0 \
     && eval $(opam env --switch=aeneas-5.2 --set-switch) \
     && cd /opt/src/aeneas \
+    && mkdir -p /opt/src/aeneas/charon/bin \
+    && ln -sf /opt/bin/charon /opt/src/aeneas/charon/bin/charon \
+    && ln -sf /opt/bin/charon-driver /opt/src/aeneas/charon/bin/charon-driver \
     && OPAM_FILES="$(find . -maxdepth 2 -name '*.opam')" \
     && opam install -y coq.8.18.0 \
     && opam install -y --deps-only ${OPAM_FILES} \
-    && make \
+    && make build-aeneas \
     && cp bin/aeneas /opt/bin/aeneas \
     && cp -r backends/coq/* /opt/aeneas/backends/coq/ \
     && cd / \
