@@ -18,8 +18,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install Rust toolchain from rust-toolchain.toml
+      - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.82.0"
+          components: rustfmt, clippy
+          targets: thumbv7em-none-eabihf
 
       - name: Run fast crate verification and boundary lints
         run: |
