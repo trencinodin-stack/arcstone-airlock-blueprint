@@ -1,5 +1,5 @@
-# Coq 8.20.0 + OCaml 5.2.0 base image (replace with @sha256:... digest once built and pushed)
-FROM coqorg/coq:8.20.0-ocaml-5.2.0-flambda
+# Verified Coq 8.18.0 base image (replace with @sha256:... digest once built and pushed)
+FROM coqorg/coq:8.18.0-ocaml-4.14.2-flambda
 
 USER root
 
@@ -13,7 +13,7 @@ ENV CARGO_HOME=/opt/cargo \
     PATH="/opt/cargo/bin:/opt/bin:${PATH}"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates curl git build-essential pkg-config libssl-dev python3 jq m4 libgmp-dev \
+    ca-certificates curl git build-essential pkg-config libssl-dev python3 jq m4 libgmp-dev unzip bubblewrap \
     && rm -rf /var/lib/apt/lists/* \
     && git config --global --add safe.directory '*'
 
@@ -48,26 +48,29 @@ RUN set -euxo pipefail \
     && make build-charon-rust \
     && cp bin/* /opt/bin/
 
-# Install Aeneas OCaml dependencies and build Aeneas
+# Create OCaml 5.2.0 switch with Coq 8.18.0 + Aeneas dependencies and build Aeneas
 RUN set -euxo pipefail \
-    && eval $(opam env) \
-    && cd /opt/src/aeneas \
     && opam update default coq-released \
+    && opam switch create aeneas-5.2 ocaml-base-compiler.5.2.0 \
+    && eval $(opam env --switch=aeneas-5.2 --set-switch) \
+    && cd /opt/src/aeneas \
     && OPAM_FILES="$(find . -maxdepth 2 -name '*.opam')" \
-    && echo "Found opam files: ${OPAM_FILES}" \
+    && opam install -y coq.8.18.0 \
     && opam install -y --deps-only ${OPAM_FILES} \
     && make \
     && cp bin/aeneas /opt/bin/aeneas \
     && cp -r backends/coq/* /opt/aeneas/backends/coq/
 
-# Switch to strict offline mode for runtime container execution
-ENV CARGO_NET_OFFLINE=true \
+# Expose OCaml 5.2.0 + Coq 8.18.0 switch binaries on PATH for runtime container execution
+ENV PATH="/home/coq/.opam/aeneas-5.2/bin:/opt/cargo/bin:/opt/bin:${PATH}" \
+    OPAMSWITCH=aeneas-5.2 \
+    CARGO_NET_OFFLINE=true \
     CARGO_INCREMENTAL=0 \
     LC_ALL=C.UTF-8 \
     TZ=UTC \
     SOURCE_DATE_EPOCH=0
 
-RUN chmod -R a+rX /opt/cargo /opt/rustup /opt/bin /opt/aeneas
+RUN chmod -R a+rX /opt/cargo /opt/rustup /opt/bin /opt/aeneas /home/coq/.opam
 
 USER 65532:65532
 WORKDIR /work
