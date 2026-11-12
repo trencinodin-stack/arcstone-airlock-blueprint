@@ -1,25 +1,22 @@
-# Digest-pinned Coq 8.18.0 base image (replace digest during image qualification)
-FROM coqorg/coq:8.18.0-ocaml-4.14.1-flambda
+# Coq 8.18.0 base image (replace with @sha256:... digest once built and pushed)
+FROM coqorg/coq:8.18.0-ocaml-4.14.2-flambda
 
 USER root
 
-ARG RUST_NIGHTLY=nightly-2024-11-01
 ARG CHARON_COMMIT=main
 ARG AENEAS_COMMIT=main
 
 ENV CARGO_HOME=/opt/cargo \
     RUSTUP_HOME=/opt/rustup \
-    RUSTUP_TOOLCHAIN=${RUST_NIGHTLY} \
     CARGO_NET_OFFLINE=false \
     PATH="/opt/cargo/bin:/opt/bin:${PATH}"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates curl git build-essential pkg-config libssl-dev python3 jq \
+    ca-certificates curl git build-essential pkg-config libssl-dev python3 jq m4 libgmp-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install pinned Rust nightly with compiler internals required by Charon
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain "${RUST_NIGHTLY}" --profile minimal \
-    && rustup component add --toolchain "${RUST_NIGHTLY}" rustc-dev llvm-tools-preview rust-src
+# Install rustup (exact nightly is installed from Charon's pinned rust-toolchain)
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain none --profile minimal
 
 # Clone Aeneas and verify co-versioned charon-pin match
 RUN mkdir -p /opt/src /opt/bin /opt/aeneas/backends/coq \
@@ -32,9 +29,23 @@ RUN mkdir -p /opt/src /opt/bin /opt/aeneas/backends/coq \
     && git clone https://github.com/AeneasVerif/charon.git /opt/src/charon \
     && git -C /opt/src/charon checkout "${PINNED_CHARON}"
 
-# Build Charon and Aeneas
-RUN cd /opt/src/charon && cargo build --release && cp target/release/charon /opt/bin/charon
-RUN eval $(opam env) && cd /opt/src/aeneas && make && cp bin/aeneas /opt/bin/aeneas \
+# Install Charon's exact pinned Rust nightly toolchain + compiler internals and build Charon
+RUN cd /opt/src/charon \
+    && if [ -f rust-toolchain.template ] && [ ! -f rust-toolchain ] && [ ! -f rust-toolchain.toml ]; then \
+         cp rust-toolchain.template rust-toolchain; \
+       fi \
+    && rustup show active-toolchain \
+    && rustup show active-toolchain | awk '{print $1}' > /opt/aeneas/rust-nightly-pin \
+    && make build-charon-rust \
+    && cp bin/charon /opt/bin/charon
+
+# Install Aeneas OCaml dependencies and build Aeneas
+RUN eval $(opam env) \
+    && cd /opt/src/aeneas \
+    && opam update \
+    && opam install -y src --deps-only \
+    && make \
+    && cp bin/aeneas /opt/bin/aeneas \
     && cp -r backends/coq/* /opt/aeneas/backends/coq/
 
 # Switch to strict offline mode for runtime container execution
