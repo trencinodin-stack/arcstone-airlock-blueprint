@@ -18,17 +18,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install rustup (exact nightly is installed from Charon's pinned rust-toolchain)
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain none --profile minimal
 
-# Clone Aeneas and verify co-versioned charon-pin match
-RUN mkdir -p /opt/src /opt/bin /opt/aeneas/backends/coq \
+# Clone Aeneas and resolve co-versioned Charon commit
+RUN set -euxo pipefail \
+    && mkdir -p /opt/src /opt/bin /opt/aeneas/backends/coq \
     && git clone https://github.com/AeneasVerif/aeneas.git /opt/src/aeneas \
     && git -C /opt/src/aeneas checkout "${AENEAS_COMMIT}" \
-    && PINNED_CHARON="$(tr -d '[:space:]' < /opt/src/aeneas/charon-pin)" \
+    && ls -la /opt/src/aeneas \
+    && if [ -f /opt/src/aeneas/charon-pin ]; then \
+         PINNED_CHARON="$(tr -d '[:space:]' < /opt/src/aeneas/charon-pin)"; \
+       elif [ -d /opt/src/aeneas/charon ] || git -C /opt/src/aeneas ls-tree HEAD charon | grep -q commit; then \
+         PINNED_CHARON="$(git -C /opt/src/aeneas ls-tree HEAD charon | awk '{print $3}')"; \
+       elif [ -f /opt/src/aeneas/flake.nix ]; then \
+         PINNED_CHARON="$(grep -Eo 'charon\.url.*rev=[0-9a-f]{7,40}' /opt/src/aeneas/flake.nix | sed -E 's/.*rev=([0-9a-f]+).*/\1/' | head -n1)"; \
+       else \
+         echo "ERROR: Could not locate Charon pin in /opt/src/aeneas"; exit 1; \
+       fi \
+    && echo "Resolved PINNED_CHARON=${PINNED_CHARON}" \
     && if [ "${CHARON_COMMIT}" != "main" ] && [ "${CHARON_COMMIT}" != "${PINNED_CHARON}" ]; then \
-         echo "ERROR: CHARON_COMMIT (${CHARON_COMMIT}) != aeneas/charon-pin (${PINNED_CHARON})"; exit 1; \
+         echo "ERROR: CHARON_COMMIT (${CHARON_COMMIT}) != resolved PINNED_CHARON (${PINNED_CHARON})"; exit 1; \
        fi \
     && git clone https://github.com/AeneasVerif/charon.git /opt/src/charon \
-    && git -C /opt/src/charon checkout "${PINNED_CHARON}"
-
+    && git -C /opt/src/charon checkout "${PINNED_CHARON}" \
+    && echo "${PINNED_CHARON}" > /opt/aeneas/charon-pin \
+    && git -C /opt/src/aeneas rev-parse HEAD > /opt/aeneas/aeneas-pin
 # Install Charon's exact pinned Rust nightly toolchain + compiler internals and build Charon
 RUN cd /opt/src/charon \
     && if [ -f rust-toolchain.template ] && [ ! -f rust-toolchain ] && [ ! -f rust-toolchain.toml ]; then \
