@@ -2,8 +2,8 @@
    Validated before compilation by airlock/scripts/check-shape.sh.
    Uses Require Export + Export ExampleNoStdGate so constructors resolve automatically in Spec.v and Refinement.v. *)
 From Coq Require Export ZArith.ZArith.
-From Gen Require Export Primitives.
-From Gen Require Export ExampleNoStdGate.
+Require Export Primitives.
+Require Export ExampleNoStdGate.
 Export ExampleNoStdGate.
 
 Definition gen_mode    := Mode_t.
