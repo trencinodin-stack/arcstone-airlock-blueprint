@@ -85,9 +85,12 @@ def verify_golden_statement(work_gen: pathlib.Path, work_coq: pathlib.Path, work
 
 
 def run_kernel_and_assumption_audit(work_gen: pathlib.Path, work_coq: pathlib.Path, work_audit: pathlib.Path, allow_path: pathlib.Path) -> None:
-    # 1. Enforce empty allowlist policy in v0.1.0
-    if allow_path.read_text(encoding="utf-8").strip() != "":
-        raise RuntimeError("ASSUMPTIONS.allow must be empty in v0.1.0")
+    # 1. Load explicitly allowlisted Aeneas Primitives.v axioms
+    allowed = {
+        line.strip()
+        for line in allow_path.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    }
 
     # 2. Recursive kernel recheck via coqchk -o
     subprocess.run(
@@ -110,8 +113,16 @@ def run_kernel_and_assumption_audit(work_gen: pathlib.Path, work_coq: pathlib.Pa
         check=True,
     )
     out = res.stdout.strip()
-    if out != "Closed under the global context":
+    if out == "Closed under the global context":
+        return
+
+    lines = [line.strip() for line in out.splitlines() if line.strip()]
+    if not lines or lines[0] != "Axioms:":
         raise RuntimeError(f"Assumption closure check failed! Output:\n{out}")
+
+    unexpected = [ax for ax in lines[1:] if ax not in allowed]
+    if unexpected:
+        raise RuntimeError(f"Unexpected assumptions detected: {unexpected}\nFull output:\n{out}")
 
 
 def compute_generated_coq_manifest_sha256(work_gen: pathlib.Path) -> str:
