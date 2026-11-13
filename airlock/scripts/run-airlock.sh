@@ -37,6 +37,7 @@ rm -rf "$STAGED_INPUT_DIR/example-no-std-gate-tmp"
 
 cp Cargo.toml Cargo.lock PINS.lock "$STAGED_INPUT_DIR/"
 cp -r airlock "$STAGED_INPUT_DIR/"
+chmod +x "$STAGED_INPUT_DIR"/airlock/scripts/*.sh
 chmod -R a-w "$STAGED_INPUT_DIR"
 
 docker run --rm \
@@ -69,6 +70,6 @@ docker run --rm \
   --mount "type=bind,src=$STAGED_INPUT_DIR,dst=/src,readonly" \
   --mount "type=bind,src=$OUT_DIR,dst=/out" \
   "$OCI_IMAGE_DIGEST" \
-  /src/airlock/scripts/entrypoint.sh
+  /bin/bash /src/airlock/scripts/entrypoint.sh
 
 echo "OK: Canonical receipt minted at ${OUT_DIR}/REFINEMENT-AUDIT.json"
