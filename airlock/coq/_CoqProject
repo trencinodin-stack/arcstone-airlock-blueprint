@@ -1,4 +1,4 @@
--R gen ""
+-Q gen Primitives
 -Q . Airlock
 gen/Primitives.v
 gen/ExampleNoStdGate.v
