@@ -36,7 +36,7 @@ RUN set -euxo pipefail \
     && echo "${PINNED_CHARON}" > /opt/aeneas/charon-pin \
     && git -C /opt/src/aeneas rev-parse HEAD > /opt/aeneas/aeneas-pin
 
-# Install Charon's exact pinned Rust nightly toolchain + compiler internals, build Charon, and reclaim ~7.5GB Rust target artifacts
+# Install Charon's exact pinned Rust nightly toolchain + compiler internals, build Charon, set permissions, and reclaim ~7.5GB
 RUN set -euxo pipefail \
     && cd /opt/src/charon \
     && if [ -f rust-toolchain.template ] && [ ! -f rust-toolchain ] && [ ! -f rust-toolchain.toml ]; then \
@@ -48,9 +48,10 @@ RUN set -euxo pipefail \
     && make build-charon-rust \
     && cp bin/* /opt/bin/ \
     && cd / \
-    && rm -rf /opt/src/charon/charon/target /opt/cargo/registry/cache /opt/cargo/registry/src /opt/cargo/git/checkouts
+    && rm -rf /opt/src/charon/charon/target /opt/cargo/registry/cache /opt/cargo/registry/src /opt/cargo/git/checkouts \
+    && chmod -R a+rX /opt/cargo /opt/rustup /opt/bin /opt/aeneas
 
-# Replace 4.14.2 switch with OCaml 5.2.0 + Coq 8.18.0 switch, install Charon OCaml lib, build Aeneas, and clean caches
+# Replace 4.14.2 switch with OCaml 5.2.0 + Coq 8.18.0 switch, install Charon OCaml lib, build Aeneas, set permissions, and clean caches
 RUN set -euxo pipefail \
     && opam switch remove -y 4.14.2+flambda || true \
     && opam update default coq-released \
@@ -70,7 +71,8 @@ RUN set -euxo pipefail \
     && cp -r backends/coq/* /opt/aeneas/backends/coq/ \
     && cd / \
     && rm -rf /opt/src/charon /opt/src/aeneas \
-    && opam clean -a -c -s --logs
+    && opam clean -a -c -s --logs \
+    && chmod -R a+rX /opt/bin /opt/aeneas /home/coq/.opam
 
 # Expose OCaml 5.2.0 + Coq 8.18.0 switch binaries on PATH for runtime container execution
 ENV PATH="/home/coq/.opam/aeneas-5.2/bin:/opt/cargo/bin:/opt/bin:${PATH}" \
@@ -80,8 +82,6 @@ ENV PATH="/home/coq/.opam/aeneas-5.2/bin:/opt/cargo/bin:/opt/bin:${PATH}" \
     LC_ALL=C.UTF-8 \
     TZ=UTC \
     SOURCE_DATE_EPOCH=0
-
-RUN chmod -R a+rX /opt/cargo /opt/rustup /opt/bin /opt/aeneas /home/coq/.opam
 
 USER 65532:65532
 WORKDIR /work
