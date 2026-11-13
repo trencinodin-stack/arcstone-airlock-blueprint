@@ -1,0 +1,26 @@
+# arcstone-airlock-blueprint
+
+> Hermetic formal refinement blueprint verifying a `#![no_std]` Rust crate (`crates/example-no-std-gate`) against a Coq 8.18.0 specification via Charon and Aeneas, producing a schema-validated, attested `REFINEMENT-AUDIT.json` receipt (`Anchor: A-77-DELTA-SHIELD-LOCKED`).
+
+## Core Documentation
+- [README.md](README.md): Architecture overview, quickstart, and verification workflow.
+- [SECURITY.md](SECURITY.md): Threat model, trust boundaries, and vulnerability reporting.
+- [AGENTS.md](AGENTS.md): Invariants, build commands, and rules for automated/AI contributors.
+- [CITATION.cff](CITATION.cff): Citation metadata and upstream Zenodo DOI references.
+
+## Verification & Proof Artifacts
+- [crates/example-no-std-gate/src/lib.rs](crates/example-no-std-gate/src/lib.rs): Target `#![no_std]` Rust decision gate implementation.
+- [airlock/coq/Spec.v](airlock/coq/Spec.v): Pure functional specification in Coq (`spec_allow`).
+- [airlock/coq/GeneratedInterface.v](airlock/coq/GeneratedInterface.v): Type and function wrappers over Aeneas-generated Coq output.
+- [airlock/coq/Refinement.v](airlock/coq/Refinement.v): Machine-checked proof (`decide_refines_spec`) that the Rust gate is total and refines `Spec.v`.
+- [airlock/coq/ASSUMPTIONS.allow](airlock/coq/ASSUMPTIONS.allow): Explicit allowlist of pinned `Primitives.v` pointer-width axioms.
+- [airlock/golden/statement.txt](airlock/golden/statement.txt): Canonical Coq theorem type signature checked during receipt minting.
+- [airlock/golden/generated-shape.txt](airlock/golden/generated-shape.txt): Expected Aeneas module signature shape.
+
+## Pipeline & Supply-Chain Governance
+- [PINS.lock](PINS.lock): Cryptographic pins for upstream crate commit/tree, nightly Rust, Charon, Aeneas, Coq, and OCI verifier digest.
+- [Makefile](Makefile): Entrypoints for `make check-pins` and `make airlock`.
+- [airlock/scripts/mint-receipt.py](airlock/scripts/mint-receipt.py): Enforces forbidden-token bans, `coqchk -o` kernel recheck, `Print Assumptions` closure, and canonical JSON output.
+- [airlock/scripts/verify-receipt.sh](airlock/scripts/verify-receipt.sh): Validates receipt schema, evidence SHA-256 digests, protected baseline variables, and GitHub artifact attestations.
+- [airlock/schemas/receipt.schema.json](airlock/schemas/receipt.schema.json): Strict JSON Schema (`ArcstoneAirlockRefinementAuditV1`) for `REFINEMENT-AUDIT.json`.
+- [.github/workflows/downstream-airlock.yml](.github/workflows/downstream-airlock.yml): Three-stage CI/CD pipeline (`prove` -> `attest` -> `release-gate`).
