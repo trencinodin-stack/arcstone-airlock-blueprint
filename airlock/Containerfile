@@ -36,7 +36,7 @@ RUN set -euxo pipefail \
     && echo "${PINNED_CHARON}" > /opt/aeneas/charon-pin \
     && git -C /opt/src/aeneas rev-parse HEAD > /opt/aeneas/aeneas-pin
 
-# Install Charon's exact pinned Rust nightly toolchain + compiler internals, build Charon, and reclaim ~8GB build artifacts
+# Install Charon's exact pinned Rust nightly toolchain + compiler internals, build Charon, and reclaim ~7.5GB Rust target artifacts
 RUN set -euxo pipefail \
     && cd /opt/src/charon \
     && if [ -f rust-toolchain.template ] && [ ! -f rust-toolchain ] && [ ! -f rust-toolchain.toml ]; then \
@@ -48,23 +48,25 @@ RUN set -euxo pipefail \
     && make build-charon-rust \
     && cp bin/* /opt/bin/ \
     && cd / \
-    && rm -rf /opt/src/charon /opt/cargo/registry/cache /opt/cargo/registry/src /opt/cargo/git/checkouts
+    && rm -rf /opt/src/charon/charon/target /opt/cargo/registry/cache /opt/cargo/registry/src /opt/cargo/git/checkouts
 
-# Replace 4.14.2 switch with OCaml 5.2.0 + Coq 8.18.0 switch, build Aeneas, and clean caches
+# Replace 4.14.2 switch with OCaml 5.2.0 + Coq 8.18.0 switch, install Charon OCaml lib, build Aeneas, and clean caches
 RUN set -euxo pipefail \
     && opam switch remove -y 4.14.2+flambda || true \
     && opam update default coq-released \
     && opam switch create aeneas-5.2 ocaml-base-compiler.5.2.0 \
     && eval $(opam env --switch=aeneas-5.2 --set-switch) \
-    && cd /opt/src/aeneas \
-    && OPAM_FILES="$(find . -maxdepth 2 -name '*.opam')" \
+    && CHARON_OPAM_FILES="$(find /opt/src/charon -maxdepth 3 -name '*.opam')" \
+    && AENEAS_OPAM_FILES="$(find /opt/src/aeneas -maxdepth 2 -name '*.opam')" \
     && opam install -y coq.8.18.0 \
-    && opam install -y --deps-only ${OPAM_FILES} \
+    && opam install -y --deps-only ${CHARON_OPAM_FILES} ${AENEAS_OPAM_FILES} \
+    && opam install -y ${CHARON_OPAM_FILES} \
+    && cd /opt/src/aeneas \
     && make -C src \
     && install -m 0755 src/_build/default/bin/main.exe /opt/bin/aeneas \
     && cp -r backends/coq/* /opt/aeneas/backends/coq/ \
     && cd / \
-    && rm -rf /opt/src/aeneas \
+    && rm -rf /opt/src/charon /opt/src/aeneas \
     && opam clean -a -c -s --logs
 
 # Expose OCaml 5.2.0 + Coq 8.18.0 switch binaries on PATH for runtime container execution
