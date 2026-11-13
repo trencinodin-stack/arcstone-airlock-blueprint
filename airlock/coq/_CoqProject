@@ -1,4 +1,4 @@
--Q gen Primitives
+-R gen Aeneas
 -Q . Airlock
 gen/Primitives.v
 gen/ExampleNoStdGate.v
