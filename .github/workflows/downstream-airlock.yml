@@ -19,6 +19,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+      packages: read
     outputs:
       commit_sha: ${{ steps.resolve.outputs.commit_sha }}
       tag_name: ${{ steps.resolve.outputs.tag_name }}
@@ -28,6 +29,13 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Resolve and validate release identity
         id: resolve
@@ -85,6 +93,7 @@ jobs:
           ./airlock/scripts/verify-receipt.sh downloaded-receipt/REFINEMENT-AUDIT.json "${{ needs.prove.outputs.commit_sha }}"
 
       - name: Attest canonical receipt provenance
+        if: github.event.repository.private == false
         uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v2.2.3
         with:
           subject-path: downloaded-receipt/REFINEMENT-AUDIT.json
@@ -124,7 +133,7 @@ jobs:
           EXPECTED_TAG: ${{ needs.prove.outputs.tag_name }}
           EXPECTED_SPEC_V_SHA256: ${{ vars.EXPECTED_SPEC_V_SHA256 }}
           EXPECTED_STATEMENT_GOLDEN_SHA256: ${{ vars.EXPECTED_STATEMENT_GOLDEN_SHA256 }}
-          VERIFY_ATTESTATION: "1"
+          VERIFY_ATTESTATION: ${{ github.event.repository.private == false && '1' || '0' }}
           GH_TOKEN: ${{ github.token }}
         run: |
           ./airlock/scripts/verify-receipt.sh verified-receipt/REFINEMENT-AUDIT.json "${{ needs.prove.outputs.commit_sha }}"
