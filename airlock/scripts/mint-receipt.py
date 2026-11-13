@@ -143,6 +143,7 @@ def write_canonical_json(out_path: pathlib.Path, payload: dict) -> None:
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp_name, out_path)
+        os.chmod(out_path, 0o644)
     finally:
         if os.path.exists(tmp_name):
             os.unlink(tmp_name)
