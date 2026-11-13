@@ -12,7 +12,7 @@ Theorem decide_refines_spec :
         else Verdict_Deny).
 Proof.
   intros m budget cost.
-  unfold gen_decide, decide, spec_allow, u32_to_Z.
+  unfold gen_decide, decide, spec_allow, u32_to_Z, scalar_leb.
   destruct m; cbn; try reflexivity.
   destruct (Z.leb (to_Z cost) (to_Z budget)); reflexivity.
 Qed.
