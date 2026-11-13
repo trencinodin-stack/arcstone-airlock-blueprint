@@ -137,9 +137,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ./airlock/scripts/verify-receipt.sh verified-receipt/REFINEMENT-AUDIT.json "${{ needs.prove.outputs.commit_sha }}"
-          git fetch --tags origin
-          REMOTE_TAG_COMMIT="$(git rev-parse --verify "refs/tags/${EXPECTED_TAG}^{commit}")"
-          test "$REMOTE_TAG_COMMIT" = "${{ needs.prove.outputs.commit_sha }}"
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            git fetch --tags origin
+            REMOTE_TAG_COMMIT="$(git rev-parse --verify "refs/tags/${EXPECTED_TAG}^{commit}")"
+            test "$REMOTE_TAG_COMMIT" = "${{ needs.prove.outputs.commit_sha }}"
+          fi
 
       - name: Publish immutable GitHub Release with attested receipt
         if: startsWith(github.ref, 'refs/tags/v')
