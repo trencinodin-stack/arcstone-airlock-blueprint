@@ -36,18 +36,18 @@ if [ -z "$GEN_V" ]; then
 fi
 
 echo "=== [3/6] Verifying generated Coq interface shape ==="
-cat "$GEN_V"
 /bin/bash /src/airlock/scripts/check-shape.sh "$GEN_V" /src/airlock/golden/generated-shape.txt
 
 echo "=== [4/6] Compiling Primitives, Generated Module, Spec & Refinement Proof ==="
 cd /work/coq
-# Compile all .v files in /work/gen first in topological order
-for f in $(find /work/gen -maxdepth 1 -name '*.v' | sort); do
-  coqc -q -Q /work/gen Gen "$f"
+# Compile Primitives.v first, then all other .v files in /work/gen
+coqc -q -R /work/gen "" -Q /work/gen Gen /work/gen/Primitives.v
+for f in $(find /work/gen -maxdepth 1 -name '*.v' ! -name 'Primitives.v' | sort); do
+  coqc -q -R /work/gen "" -Q /work/gen Gen "$f"
 done
-coqc -q -Q /work/gen Gen -Q /work/coq Airlock /work/coq/GeneratedInterface.v
-coqc -q -Q /work/gen Gen -Q /work/coq Airlock /work/coq/Spec.v
-coqc -q -Q /work/gen Gen -Q /work/coq Airlock /work/coq/Refinement.v
+coqc -q -R /work/gen "" -Q /work/gen Gen -Q /work/coq Airlock /work/coq/GeneratedInterface.v
+coqc -q -R /work/gen "" -Q /work/gen Gen -Q /work/coq Airlock /work/coq/Spec.v
+coqc -q -R /work/gen "" -Q /work/gen Gen -Q /work/coq Airlock /work/coq/Refinement.v
 
 echo "=== [5/6] Running isolated semantic canary mutant in /work/canary ==="
 mkdir -p /work/canary/src/crates /work/canary/gen /work/canary/coq
@@ -76,15 +76,16 @@ cd /work/canary/gen
 aeneas -backend coq "$CANARY_LLBC" -dest /work/canary/gen
 
 # Prerequisites (Primitives, Generated module, Interface, Spec) MUST compile cleanly on mutant
-for f in $(find /work/canary/gen -maxdepth 1 -name '*.v' | sort); do
-  coqc -q -Q /work/canary/gen Gen "$f"
+coqc -q -R /work/canary/gen "" -Q /work/canary/gen Gen /work/canary/gen/Primitives.v
+for f in $(find /work/canary/gen -maxdepth 1 -name '*.v' ! -name 'Primitives.v' | sort); do
+  coqc -q -R /work/canary/gen "" -Q /work/canary/gen Gen "$f"
 done
-coqc -q -Q /work/canary/gen Gen -Q /work/canary/coq Airlock /work/canary/coq/GeneratedInterface.v
-coqc -q -Q /work/canary/gen Gen -Q /work/canary/coq Airlock /work/canary/coq/Spec.v
+coqc -q -R /work/canary/gen "" -Q /work/canary/gen Gen -Q /work/canary/coq Airlock /work/canary/coq/GeneratedInterface.v
+coqc -q -R /work/canary/gen "" -Q /work/canary/gen Gen -Q /work/canary/coq Airlock /work/canary/coq/Spec.v
 
 # Refinement.v MUST fail specifically on the refinement proof obligation
 set +e
-CANARY_OUT="$(coqc -q -Q /work/canary/gen Gen -Q /work/canary/coq Airlock /work/canary/coq/Refinement.v 2>&1)"
+CANARY_OUT="$(coqc -q -R /work/canary/gen "" -Q /work/canary/gen Gen -Q /work/canary/coq Airlock /work/canary/coq/Refinement.v 2>&1)"
 CANARY_RC=$?
 set -e
 if [ "$CANARY_RC" -eq 0 ]; then
