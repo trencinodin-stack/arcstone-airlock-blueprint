@@ -63,7 +63,10 @@ RUN set -euxo pipefail \
     && opam install -y ${CHARON_OPAM_FILES} \
     && cd /opt/src/aeneas \
     && make -C src \
-    && install -m 0755 src/_build/default/bin/main.exe /opt/bin/aeneas \
+    && AENEAS_BIN="$(find /opt/src/aeneas -type f \( -name 'aeneas' -o -name 'aeneas.exe' -o -name 'main.exe' \) -executable | head -n1)" \
+    && echo "Found Aeneas binary: ${AENEAS_BIN}" \
+    && test -n "${AENEAS_BIN}" \
+    && install -m 0755 "${AENEAS_BIN}" /opt/bin/aeneas \
     && cp -r backends/coq/* /opt/aeneas/backends/coq/ \
     && cd / \
     && rm -rf /opt/src/charon /opt/src/aeneas \
