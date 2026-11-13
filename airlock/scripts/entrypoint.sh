@@ -16,6 +16,22 @@ cp /src/airlock/coq/Refinement.v /work/coq/Refinement.v
 cp -r /opt/aeneas/backends/coq/* /work/gen/
 chmod -R u+w /work/src /work/coq /work/gen
 
+patch_clone_from() {
+  python3 - "$1" "$2" <<'PY'
+import pathlib, re, sys
+gen_v = pathlib.Path(sys.argv[1])
+prim_v = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8")
+ret = "Ok (tt, src)" if "result (unit * Self)" in prim_v else "Ok src"
+txt = gen_v.read_text(encoding="utf-8")
+txt = re.sub(
+    r"(core_clone_Clone_clone := [A-Za-z0-9_]+_Insts_CoreCloneClone_clone;)",
+    rf"\1\n  core_clone_Clone_clone_from := fun _ src => {ret};",
+    txt,
+)
+gen_v.write_text(txt, encoding="utf-8")
+PY
+}
+
 echo "=== [2/6] Running Charon LLBC extraction (--lib only) & Aeneas Coq synthesis ==="
 cd /work/src/crates/example-no-std-gate
 charon cargo --preset=aeneas -- --locked --lib
@@ -34,6 +50,7 @@ if [ -z "$GEN_V" ]; then
   echo "ERROR: Aeneas produced no generated .v module" >&2
   exit 1
 fi
+patch_clone_from "$GEN_V" /work/gen/Primitives.v
 
 echo "=== [3/6] Verifying generated Coq interface shape ==="
 /bin/bash /src/airlock/scripts/check-shape.sh "$GEN_V" /src/airlock/golden/generated-shape.txt
@@ -73,6 +90,9 @@ CANARY_LLBC="$(find /work/canary/src -maxdepth 4 -name '*.llbc' | head -n1)"
 [ -n "$CANARY_LLBC" ] || { echo "ERROR: Canary extraction failed unexpectedly" >&2; exit 1; }
 cd /work/canary/gen
 aeneas -backend coq "$CANARY_LLBC" -dest /work/canary/gen
+
+CANARY_GEN_V="$(find /work/canary/gen -maxdepth 1 -name '*.v' ! -name 'Primitives.v' | sort | head -n1)"
+patch_clone_from "$CANARY_GEN_V" /work/canary/gen/Primitives.v
 
 # Prerequisites (Primitives, Generated module, Interface, Spec) MUST compile cleanly on mutant
 coqc -q -R /work/canary/gen Aeneas /work/canary/gen/Primitives.v
