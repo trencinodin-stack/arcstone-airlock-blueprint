@@ -1,5 +1,5 @@
-Inductive mode_t
-Inductive verdict_t
+Inductive Mode_t
+Inductive Verdict_t
 Mode_Safe
 Mode_Armed
 Mode_Fault
