@@ -50,9 +50,9 @@ This verifies `PINS.lock`, pulls the digest-pinned verifier OCI image if not cac
 
 ---
 
-## Release Governance Checklist (`v0.1.0`)
+## Governance & Release Controls
 
-- [x] **Digest-Pinned Verifier OCI Image:** Built and pinned by `@sha256:...` digest in `PINS.lock`.
-- [x] **Coq 8.18.0 Proof & Golden Qualification:** `GeneratedInterface.v`, `Spec.v`, `Refinement.v`, `generated-shape.txt`, `statement.txt`, and `ASSUMPTIONS.allow` qualified and verified end-to-end.
-- [x] **Protected Specification Baselines:** `EXPECTED_SPEC_V_SHA256` and `EXPECTED_STATEMENT_GOLDEN_SHA256` configured in the GitHub `production` environment.
-- [ ] **Immutable Release & Tag Protection:** Enable GitHub **Immutable Releases**, protected `v*` tag rulesets, and `CODEOWNERS` required reviews prior to pushing `v0.1.0`.
+- **Digest-Pinned Verifier OCI Image:** Built and pinned by `@sha256:...` digest in `PINS.lock`.
+- **Coq 8.18.0 Proof & Golden Qualification:** `GeneratedInterface.v`, `Spec.v`, `Refinement.v`, `generated-shape.txt`, `statement.txt`, and `ASSUMPTIONS.allow` verified end-to-end.
+- **Protected Specification Baselines:** `EXPECTED_SPEC_V_SHA256` and `EXPECTED_STATEMENT_GOLDEN_SHA256` enforced via the GitHub `production` environment.
+- **Immutable Release & Tag Protection:** GitHub Immutable Releases, protected `v*` tag rulesets, and `CODEOWNERS` required reviews enforced on release tags.
