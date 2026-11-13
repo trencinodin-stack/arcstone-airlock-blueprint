@@ -22,6 +22,7 @@ mkdir -p "$OUT_DIR"
 chmod 1777 "$OUT_DIR"
 
 cleanup() {
+  chmod -R u+w "$STAGED_INPUT_DIR" 2>/dev/null || true
   rm -rf "$STAGED_INPUT_DIR"
 }
 trap cleanup EXIT
@@ -66,7 +67,7 @@ docker run --rm \
   --env TZ=UTC \
   --env SOURCE_DATE_EPOCH=0 \
   --mount "type=bind,src=$STAGED_INPUT_DIR,dst=/src,readonly" \
-  --mount "type=bind,src=$OUT_DIR,dst=/out,rw" \
+  --mount "type=bind,src=$OUT_DIR,dst=/out" \
   "$OCI_IMAGE_DIGEST" \
   /src/airlock/scripts/entrypoint.sh
 
