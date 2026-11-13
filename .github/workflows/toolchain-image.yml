@@ -25,6 +25,12 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Free disk space on runner
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker system prune -af
+          df -h
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
@@ -36,18 +42,20 @@ jobs:
         id: build
         run: |
           IMAGE_NAME="ghcr.io/${GITHUB_REPOSITORY,,}-verifier"
+          echo "image_name=${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
           docker build -f airlock/Containerfile -t "${IMAGE_NAME}:latest" .
           if [ "${{ inputs.push_image }}" = "true" ]; then
             docker push "${IMAGE_NAME}:latest"
-            DIGEST="$(docker inspect --format='{{index .RepoDigests 0}}' "${IMAGE_NAME}:latest")"
-            echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
-            echo "Built and pushed digest-pinned verifier image: ${DIGEST}"
+            FULL_DIGEST="$(docker inspect --format='{{index .RepoDigests 0}}' "${IMAGE_NAME}:latest")"
+            SHA_DIGEST="${FULL_DIGEST##*@}"
+            echo "digest=${SHA_DIGEST}" >> "$GITHUB_OUTPUT"
+            echo "Built and pushed digest-pinned verifier image: ${FULL_DIGEST}"
           fi
 
       - name: Attest OCI image provenance
         if: inputs.push_image == 'true'
         uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
         with:
-          subject-name: ghcr.io/${{ github.repository }}-verifier
+          subject-name: ${{ steps.build.outputs.image_name }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
