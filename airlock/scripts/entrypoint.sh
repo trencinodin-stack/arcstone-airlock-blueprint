@@ -36,6 +36,7 @@ if [ -z "$GEN_V" ]; then
 fi
 
 echo "=== [3/6] Verifying generated Coq interface shape ==="
+cat "$GEN_V"
 /bin/bash /src/airlock/scripts/check-shape.sh "$GEN_V" /src/airlock/golden/generated-shape.txt
 
 echo "=== [4/6] Compiling Primitives, Generated Module, Spec & Refinement Proof ==="
