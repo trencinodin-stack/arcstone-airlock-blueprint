@@ -1,8 +1,9 @@
 (* Transparent adapter bound to the pinned Aeneas Coq 8.18.0 tuple.
    Validated before compilation by airlock/scripts/check-shape.sh.
-   Uses Require Export + Export ExampleNoStdGate so constructors resolve automatically in Spec.v and Refinement.v. *)
+   Uses Require Export + Export Primitives / ExampleNoStdGate so constructors and scalar types resolve automatically in Spec.v and Refinement.v. *)
 From Coq Require Export ZArith.ZArith.
 From Aeneas Require Export Primitives.
+Export Primitives.
 From Aeneas Require Export ExampleNoStdGate.
 Export ExampleNoStdGate.
 
