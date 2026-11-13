@@ -18,7 +18,7 @@ chmod -R u+w /work/src /work/coq /work/gen
 
 echo "=== [2/6] Running Charon LLBC extraction (--lib only) & Aeneas Coq synthesis ==="
 cd /work/src/crates/example-no-std-gate
-charon cargo --preset=aeneas --locked -- --lib
+charon cargo --preset=aeneas -- --locked --lib
 LLBC_FILE="$(find /work/src -maxdepth 4 -name '*.llbc' | head -n1)"
 if [ -z "$LLBC_FILE" ]; then
   echo "ERROR: Charon produced no .llbc file" >&2
@@ -68,7 +68,7 @@ open(p, "w", encoding="utf-8").write(txt.replace("cost <= budget", "cost >= budg
 PY
 
 cd /work/canary/src/crates/example-no-std-gate
-CARGO_TARGET_DIR=/work/canary/target charon cargo --preset=aeneas --locked -- --lib
+CARGO_TARGET_DIR=/work/canary/target charon cargo --preset=aeneas -- --locked --lib
 CANARY_LLBC="$(find /work/canary/src -maxdepth 4 -name '*.llbc' | head -n1)"
 [ -n "$CANARY_LLBC" ] || { echo "ERROR: Canary extraction failed unexpectedly" >&2; exit 1; }
 cd /work/canary/gen
