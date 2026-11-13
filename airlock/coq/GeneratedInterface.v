@@ -11,5 +11,5 @@ Open Scope Primitives_scope.
 Definition gen_mode    := Mode_t.
 Definition gen_verdict := Verdict_t.
 Definition gen_u32     := u32.
-Definition u32_to_Z (x : gen_u32) : Z := val x.
+Definition u32_to_Z (x : gen_u32) : Z := to_Z x.
 Definition gen_decide  := decide.
