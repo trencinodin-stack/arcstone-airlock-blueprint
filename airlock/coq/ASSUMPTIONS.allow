@@ -1,0 +1,3 @@
+Primitives.Primitives.usize_max : BinNums.Z
+Primitives.Primitives.isize_min : BinNums.Z
+Primitives.Primitives.isize_max : BinNums.Z
