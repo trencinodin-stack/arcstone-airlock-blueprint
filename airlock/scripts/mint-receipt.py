@@ -73,7 +73,7 @@ def verify_golden_statement(work_gen: pathlib.Path, work_coq: pathlib.Path, work
     check_v = work_audit / "CheckStatement.v"
     check_v.write_text("From Airlock Require Import Refinement.\nCheck Refinement.decide_refines_spec.\n", encoding="utf-8")
     res = subprocess.run(
-        ["coqc", "-q", "-R", str(work_gen), "", "-Q", str(work_coq), "Airlock", str(check_v)],
+        ["coqc", "-q", "-Q", str(work_gen), "Primitives", "-Q", str(work_coq), "Airlock", str(check_v)],
         capture_output=True,
         text=True,
         check=True,
@@ -91,7 +91,7 @@ def run_kernel_and_assumption_audit(work_gen: pathlib.Path, work_coq: pathlib.Pa
 
     # 2. Recursive kernel recheck via coqchk -o
     subprocess.run(
-        ["coqchk", "-o", "-R", str(work_gen), "", "-Q", str(work_coq), "Airlock", "Airlock.Refinement"],
+        ["coqchk", "-o", "-Q", str(work_gen), "Primitives", "-Q", str(work_coq), "Airlock", "Airlock.Refinement"],
         capture_output=True,
         text=True,
         check=True,
@@ -104,7 +104,7 @@ def run_kernel_and_assumption_audit(work_gen: pathlib.Path, work_coq: pathlib.Pa
         encoding="utf-8",
     )
     res = subprocess.run(
-        ["coqc", "-q", "-R", str(work_gen), "", "-Q", str(work_coq), "Airlock", str(audit_v)],
+        ["coqc", "-q", "-Q", str(work_gen), "Primitives", "-Q", str(work_coq), "Airlock", str(audit_v)],
         capture_output=True,
         text=True,
         check=True,
