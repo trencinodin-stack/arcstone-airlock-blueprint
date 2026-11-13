@@ -14,6 +14,7 @@ cp /src/airlock/coq/Refinement.v /work/coq/Refinement.v
 
 # Copy Aeneas Coq support primitives into /work/gen
 cp -r /opt/aeneas/backends/coq/* /work/gen/
+chmod -R u+w /work/src /work/coq /work/gen
 
 echo "=== [2/6] Running Charon LLBC extraction (--lib only) & Aeneas Coq synthesis ==="
 cd /work/src/crates/example-no-std-gate
@@ -35,7 +36,7 @@ if [ -z "$GEN_V" ]; then
 fi
 
 echo "=== [3/6] Verifying generated Coq interface shape ==="
-/src/airlock/scripts/check-shape.sh "$GEN_V" /src/airlock/golden/generated-shape.txt
+/bin/bash /src/airlock/scripts/check-shape.sh "$GEN_V" /src/airlock/golden/generated-shape.txt
 
 echo "=== [4/6] Compiling Primitives, Generated Module, Spec & Refinement Proof ==="
 cd /work/coq
@@ -56,6 +57,7 @@ cp -r /opt/aeneas/backends/coq/* /work/canary/gen/
 cp /src/airlock/coq/GeneratedInterface.v /work/canary/coq/GeneratedInterface.v
 cp /src/airlock/coq/Spec.v /work/canary/coq/Spec.v
 cp /src/airlock/coq/Refinement.v /work/canary/coq/Refinement.v
+chmod -R u+w /work/canary
 
 # Inject semantic mutation: flip `cost <= budget` to `cost >= budget`
 python3 - <<'PY'
