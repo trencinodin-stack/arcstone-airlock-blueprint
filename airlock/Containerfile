@@ -63,7 +63,7 @@ RUN set -euxo pipefail \
     && OPAM_FILES="$(find . -maxdepth 2 -name '*.opam')" \
     && opam install -y coq.8.18.0 \
     && opam install -y --deps-only ${OPAM_FILES} \
-    && make build-aeneas \
+    && make \
     && cp bin/aeneas /opt/bin/aeneas \
     && cp -r backends/coq/* /opt/aeneas/backends/coq/ \
     && cd / \
