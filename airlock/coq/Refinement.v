@@ -15,6 +15,6 @@ Proof.
   unfold gen_decide, decide, spec_allow, u32_to_Z.
   destruct m; cbn; try reflexivity.
   (* Qualified against pinned Aeneas Primitives.v scalar comparison lemma *)
-  destruct (Z.leb (cost.(val)) (budget.(val))) eqn:Hcmp;
+  destruct (Z.leb (val cost) (val budget)) eqn:Hcmp;
     rewrite <- ?u32_leb_spec, ?Hcmp; reflexivity.
 Qed.
