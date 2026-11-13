@@ -38,7 +38,7 @@ rm -rf "$STAGED_INPUT_DIR/example-no-std-gate-tmp"
 cp Cargo.toml Cargo.lock PINS.lock "$STAGED_INPUT_DIR/"
 cp -r airlock "$STAGED_INPUT_DIR/"
 chmod +x "$STAGED_INPUT_DIR"/airlock/scripts/*.sh
-chmod -R a-w "$STAGED_INPUT_DIR"
+chmod -R a-w,a+rX "$STAGED_INPUT_DIR"
 
 docker run --rm \
   --network none \
