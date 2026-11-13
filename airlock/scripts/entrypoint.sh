@@ -61,7 +61,6 @@ coqc -q -R /work/gen Aeneas /work/gen/Primitives.v
 for f in $(find /work/gen -maxdepth 1 -name '*.v' ! -name 'Primitives.v' | sort); do
   coqc -q -R /work/gen Aeneas "$f"
 done
-grep -n -C 15 "u32" /work/gen/Primitives.v || true
 coqc -q -R /work/gen Aeneas -Q /work/coq Airlock /work/coq/GeneratedInterface.v
 coqc -q -R /work/gen Aeneas -Q /work/coq Airlock /work/coq/Spec.v
 coqc -q -R /work/gen Aeneas -Q /work/coq Airlock /work/coq/Refinement.v
