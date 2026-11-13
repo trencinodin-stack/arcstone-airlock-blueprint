@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   fast-check:
@@ -31,16 +30,3 @@ jobs:
           make quick
           make lint
           make test-receipts
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Print PINS.lock qualification values
-        run: |
-          ALLOW_UNQUALIFIED_PINS=1 ./airlock/scripts/check-pins.sh
-          AENEAS_SHA="$(docker run --rm --entrypoint cat ghcr.io/trencinodin-stack/arcstone-airlock-blueprint-verifier@sha256:f88b4b1c4581566a39d364bf0e0145989dfd1b06be2e93fe18c8ae36f4a263a1 /opt/aeneas/aeneas-pin)"
-          echo "AENEAS_COMMIT=${AENEAS_SHA}"
