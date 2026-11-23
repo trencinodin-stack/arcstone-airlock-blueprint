@@ -228,6 +228,6 @@ quick_check:
 ## 7. Known Gaps & Open Errata
 ```yaml
 known_gaps:
-- "Downstream repositories cloning this template must update EXPECTED_SPEC_V_SHA256 and EXPECTED_STATEMENT_GOLDEN_SHA256 when replacing crates/example-no-std-gate"
-- "Git tag v0.1.0 is unsigned until GPG/Sigstore release signing is configured"
+  - "Downstream repositories cloning this template must update EXPECTED_SPEC_V_SHA256 and EXPECTED_STATEMENT_GOLDEN_SHA256 when replacing crates/example-no-std-gate"
+  - "Git tag v0.1.0 is unsigned until GPG/Sigstore release signing is configured"
 ```
