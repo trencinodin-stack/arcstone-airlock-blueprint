@@ -46,56 +46,56 @@ errata: ["ARC-ERR-2026-001"]
 evidence_ladder: [proved, tested, measured, static_analysis, stated, external_llm_review]
 auditor_states: [not_checked, identity_checked, reproduced_pass, reproduced_fail, blocked, conflict]
 normative_artifacts:
-- id: "ART-COQ-SPEC-01"
+  - id: "ART-COQ-SPEC-01"
     path: "airlock/coq/Spec.v"
     hash_algorithm: "sha256"
     digest: "b90b6746b3d573743d99e9317265282214bca04b4c094e82b12347000268c706"
     claimed_level: "stated"
     toolchain: "Coq 8.18.0 Functional Specification"
     toolchain_image_digest: "sha256:8f9c2d4e6a1b3c5d7e9f0a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d"
-- id: "ART-COQ-REF-01"
+  - id: "ART-COQ-REF-01"
     path: "airlock/coq/Refinement.v"
     hash_algorithm: "sha256"
     digest: "7084e388a9adab0d5e97bdfb81a0d874e2316c2b1c987a0afb9d409d248a4e34"
     claimed_level: "proved"
     toolchain: "Charon + Aeneas -> Coq 8.18.0 + coqchk"
     toolchain_image_digest: "sha256:8f9c2d4e6a1b3c5d7e9f0a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d"
-- id: "ART-COQ-ALLOW-01"
+  - id: "ART-COQ-ALLOW-01"
     path: "airlock/coq/ASSUMPTIONS.allow"
     hash_algorithm: "sha256"
     digest: "a47e6062ae3674f17203cf3fba6aeab5d19171e0090ad2528195e85babe6ca74"
     claimed_level: "stated"
     toolchain: "Coq Print Assumptions Allowlist"
     toolchain_image_digest: "sha256:8f9c2d4e6a1b3c5d7e9f0a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d"
-- id: "ART-RUST-GATE-01"
+  - id: "ART-RUST-GATE-01"
     path: "crates/example-no-std-gate/src/lib.rs"
     hash_algorithm: "sha256"
     digest: "d93e6ca6c32a31cd494207951d6f5ac5e218bd08fb4898bdc28fc87c70225d1b"
     claimed_level: "tested"
     toolchain: "Rust no_std cargo test"
     toolchain_image_digest: "sha256:8f9c2d4e6a1b3c5d7e9f0a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d"
-- id: "ART-PINS-01"
+  - id: "ART-PINS-01"
     path: "PINS.lock"
     hash_algorithm: "sha256"
     digest: "f08e03f6cf53369ac1cbf81997646153076bc3624021b31ebfcbe2a03c4be695"
     claimed_level: "stated"
     toolchain: "Digest-Pinned OCI Airlock Lockfile"
     toolchain_image_digest: "sha256:8f9c2d4e6a1b3c5d7e9f0a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d"
-- id: "ART-SCHEMA-01"
+  - id: "ART-SCHEMA-01"
     path: "airlock/schemas/receipt.schema.json"
     hash_algorithm: "sha256"
     digest: "ffd5011c182932348b1a853ba0edc3c0d03f5d5d95a724d5d397ae1184f65e43"
     claimed_level: "stated"
     toolchain: "JSON Schema Draft 2020-12"
     toolchain_image_digest: "sha256:8f9c2d4e6a1b3c5d7e9f0a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d"
-- id: "ART-AGENTS-01"
+  - id: "ART-AGENTS-01"
     path: "AGENTS.md"
     hash_algorithm: "sha256"
     digest: "2e13e1f8fb630536009fc4e62f9838421452d766e008855497a7ea146f9205c0"
     claimed_level: "stated"
     toolchain: "UTF-8 Markdown Agent Manifest"
     toolchain_image_digest: "sha256:8f9c2d4e6a1b3c5d7e9f0a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d"
-- id: "ART-LLMS-01"
+  - id: "ART-LLMS-01"
     path: "llms.txt"
     hash_algorithm: "sha256"
     digest: "4eed66f950299bcc474e1c9a74dc6477312dde2b4a0e8bdae2d3540d352158e2"
@@ -103,14 +103,14 @@ normative_artifacts:
     toolchain: "UTF-8 Markdown Discovery Index"
     toolchain_image_digest: "sha256:8f9c2d4e6a1b3c5d7e9f0a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d"
 non_normative_surfaces:
-- path_or_url: "README.md"
+  - path_or_url: "README.md"
     kind: "expository"
 ```
 
 ## 3. Hard Invariants & Claim-to-Evidence Map
 ```yaml
 claims:
-- id: "CLM-001"
+  - id: "CLM-001"
     quantity_id: "decide_refines_spec_theorem"
     statement: "Extracted no_std Rust gate evaluation refines pure Coq functional specification spec_allow with zero unapproved axioms beyond ASSUMPTIONS.allow"
     operator: "=="
@@ -137,7 +137,7 @@ claims:
       declared_items: ["Only Primitives.Primitives.{usize_max,isize_min,isize_max} in ASSUMPTIONS.allow permitted", "Semantic canary mutant step [5/6] rejects broken implementations"]
       dependency_audit: "coqchk_and_assumptions_allowlist"
     failure_behavior: "coq_compile_error_or_axiom_allowlist_violation"
-- id: "CLM-002"
+  - id: "CLM-002"
     quantity_id: "no_std_example_gate_tests"
     statement: "Freestanding no_std Rust example gate crate compiles without std and passes unit and integration test suites"
     operator: "=="
@@ -169,7 +169,7 @@ claims:
 ## 4. Authority Routing Table
 ```yaml
 routes:
-- query_key: "airlock.refinement_theorem"
+  - query_key: "airlock.refinement_theorem"
     description: "Total Coq 8.18.0 refinement theorem (decide_refines_spec) bridging Aeneas-extracted Rust gate to Spec.v"
     definition_ref: "ART-COQ-SPEC-01"
     evidence_ref:
@@ -178,7 +178,7 @@ routes:
       symbol_kind: "theorem"
     refinement_ref: "ART-COQ-REF-01"
     non_authoritative_refs: ["README.md"]
-- query_key: "airlock.receipt_schema"
+  - query_key: "airlock.receipt_schema"
     description: "JSON Schema Draft 2020-12 governing REFINEMENT-AUDIT.json release receipts"
     definition_ref: "ART-AGENTS-01"
     evidence_ref:
