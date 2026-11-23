@@ -218,7 +218,7 @@ quick_check:
   receipt_output: "out/AUDIT-RECEIPT.json"
   receipt_schema_ref: "machinefirst-receipt-v0.1"
   negative_control:
-    command: "python3 -c "import pathlib, sys; sys.exit(0 if 'PLACEHOLDER' in pathlib.Path('MACHINEFIRST.md').read_text(encoding='utf-8') else 1)""
+    command: 'python3 -c "import pathlib, sys; sys.exit(0 if \'PLACEHOLDER\' in pathlib.Path(\'MACHINEFIRST.md\').read_text(encoding=\'utf-8\') else 1)"'
     expected_exit_code: 1
     expected_reason: "target_invariant_violation"
     required_for_pass: true
